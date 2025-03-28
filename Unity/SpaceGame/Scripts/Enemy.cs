@@ -8,13 +8,17 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    public float speed = 3f;
 
+    public float speed = 3f;
+    public AudioClip deathSound;
+    private AudioSource audioSource;
     private Camera cam;
 
     void Start()
     {
         cam = Camera.main;
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.clip = deathSound;
     }
 
     void Update()
@@ -37,8 +41,13 @@ public class Enemy : MonoBehaviour
         }
         else if (other.CompareTag("Player"))
         {
+            PlayDeathSound();
             Destroy(other.gameObject);
-            Destroy(gameObject); 
         }
+    }
+    void PlayDeathSound()
+    {
+        audioSource.Play(); 
+        Destroy(gameObject, deathSound.length);
     }
 }
