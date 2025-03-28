@@ -16,30 +16,9 @@ A fast-paced space shooter where players must survive waves of enemies while try
 - 📊 High Score Tracking
 - 🕹️ Simple and Addictive Gameplay
 
-### 📂 Installation
-1. **Clone the Repository**:
-   ```sh
-   git clone https://github.com/KareemH-1/GameDevelopment.git
-   ```
-2. **Open in Unity**:
-   - Open Unity Hub.
-   - Click "Open Project" and select the cloned folder.
-3. **Run the Game**:
-   - Press the Play button in Unity.
-
-### 🎮 Controls
-- **Arrow Keys / WASD** - Move the player
-- **Space / Return / Left Click** - Shoot
-
-### 🖼️ Screenshots
-#### **Gameplay**
-![Gameplay Screenshot](images/Gameplay.png)
-
-#### **Game Over Screen**
-![Game Over Screenshot](images/GameOver.png)
 
 ## 🕹️ Other Games
-This repository will contain multiple Unity games. More will be added soon!
+This repository will contain multiple Unity and unreal games. More will be added soon!
 
 - **[Game 1]** (Coming Soon)
 - **[Game 2]** (Coming Soon)
