@@ -15,7 +15,7 @@ A fun and engaging game where players must survive and score as high as possible
 ## 📂 Installation
 1. **Clone the Repository**:
    ```sh
-   git clone https://github.com/KareemH-1/GameDevelopment/tree/main/Unity/SpaceGame
+   git clone https://github.com/KareemH-1/GameDevelopment.git
    ```
 2. **Open in Unity**:
    - Open Unity Hub.
