@@ -1,10 +1,10 @@
 # 🎮 Game Development
 
-Welcome to my collection of Unity game projects! Each folder contains a unique game, complete with source code, assets, and documentation to help you explore and modify the projects.
+Welcome to my collection of game projects! Each folder contains a unique game, complete with source code, assets, and documentation to help you explore and modify the projects.
 
-## 🌟 Featured Game: Space Shooter
+## 🌟#1 Space Shooter (Made with Unity)
 
-![Game Screenshot](Unity/SpaceGame/images/Game.png)
+![Game Screenshot](Unity/SpaceGame/images/Game.png) 
 
 ### 📌 Description
 A fast-paced space shooter where players must survive waves of enemies while trying to achieve the highest score. The game includes an enemy spawning system, score tracking, and a game-over screen.
