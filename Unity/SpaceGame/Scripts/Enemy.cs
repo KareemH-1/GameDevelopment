@@ -9,7 +9,7 @@ using UnityEngine;
 public class Enemy : MonoBehaviour
 {
 
-    public float speed = 3f;
+    public float speed = 2f; // Adjust the speed as needed
     public AudioClip deathSound;
     private AudioSource audioSource;
     private Camera cam;
