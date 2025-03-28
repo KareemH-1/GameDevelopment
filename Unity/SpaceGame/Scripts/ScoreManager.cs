@@ -7,18 +7,30 @@ using TMPro;
 
 public class ScoreManager : MonoBehaviour
 {
-    public static ScoreManager instance;
-    public int score = 0;
+    public static ScoreManager instance; 
     public TextMeshProUGUI scoreText;
+    private int score = 0;
 
-    void Awake()
+    private void Awake()
     {
-        instance = this; 
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
     }
 
     public void AddScore(int points)
     {
         score += points;
         scoreText.text = "Score: " + score;
+    }
+    public int GetScore()
+    {
+        return score;
     }
 }

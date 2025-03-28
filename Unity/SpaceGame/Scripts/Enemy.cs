@@ -8,8 +8,7 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-
-    public float speed = 2f; // Adjust the speed as needed
+    public float speed = 2f;
     public AudioClip deathSound;
     private AudioSource audioSource;
     private Camera cam;
@@ -42,8 +41,10 @@ public class Enemy : MonoBehaviour
         }
         else if (other.CompareTag("Player"))
         {
-            PlayDeathSound();
-            Destroy(other.gameObject);
+
+            GameOverManager.instance.GameOver(ScoreManager.instance.GetScore()); // Call GameOver
+            Destroy(other.gameObject); // Destroy Player
+            Destroy(gameObject); // Destroy Enemy
         }
     }
     void PlayDeathSound()
