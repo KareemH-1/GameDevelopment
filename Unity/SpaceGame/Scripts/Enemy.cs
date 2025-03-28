@@ -34,10 +34,11 @@ public class Enemy : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Weapon"))
+        if (other.CompareTag("Weapon")) 
         {
-            Destroy(gameObject);
-            Destroy(other.gameObject);
+            ScoreManager.instance.AddScore(10); // add 10 score points
+            Destroy(other.gameObject); // destroy rocket
+            Destroy(gameObject); // Destroy enemy
         }
         else if (other.CompareTag("Player"))
         {
