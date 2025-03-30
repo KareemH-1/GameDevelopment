@@ -1,7 +1,10 @@
-//Add to enemy prefab
-
 //Add a Collider2D and set IsTrigger = true and Add a Rigidbody2D Gravity Scale = 0 on enemy and set to kinematic
 //add rigid body and box collider to player and weapon as well and set to kinematic , and on bullet set isTrigger on
+//Tag the Player as "Player".
+//Tag the Bullet as "Weapon".
+//Add a Collider2D and set IsTrigger = true on enemy
+//Add a Rigidbody2D Gravity Scale = 0 on enemy
+//add rigid body and box collider to player and weapon as well
 //Tag the Player as "Player".
 //Tag the Bullet as "Weapon".
 using UnityEngine;
@@ -30,23 +33,30 @@ public class Enemy : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Weapon")) 
+        if (other.CompareTag("Weapon"))
         {
-            ScoreManager.instance.AddScore(10); // add 10 score points
-            Destroy(other.gameObject); // destroy rocket
-            Destroy(gameObject); // Destroy enemy
+            ScoreManager.instance.AddScore(10); // Add 10 score points
+            Destroy(other.gameObject); // Destroy the bullet
+
+            PowerUpSpawner spawner = FindAnyObjectByType<PowerUpSpawner>();
+            if (spawner != null)
+            {
+                spawner.TrySpawnPowerUp(transform.position); // Spawn power-up at enemy position
+            }
+
+            Destroy(gameObject); // Destroy the enemy
         }
         else if (other.CompareTag("Player"))
         {
-
-            GameOverManager.instance.GameOver(ScoreManager.instance.GetScore()); // Call GameOver
+            GameOverManager.instance.GameOver(ScoreManager.instance.GetScore()); // Trigger game over
             Destroy(other.gameObject); // Destroy Player
             Destroy(gameObject); // Destroy Enemy
         }
     }
+
+
     void PlayDeathSound()
     {
         audioSource.Play(); 
