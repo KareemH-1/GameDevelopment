@@ -3,7 +3,6 @@
 // Also displays highscore and score.
 // UI hierarchy: Panel > Finalscore text, Gameover text, Highscore text, Restart button, Quit button.
 // Add OnClick events to Restart and Quit buttons to call RestartGame and QuitGame methods.
-
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
@@ -17,6 +16,7 @@ public class GameOverManager : MonoBehaviour
     public TextMeshProUGUI highScoreText;
     public AudioSource gameOverSound;
     public GameObject normalScoreText;
+    public GameObject UpgradeText;
     private bool isGameOver = false;
 
     private void Awake()
@@ -42,6 +42,10 @@ public class GameOverManager : MonoBehaviour
         if (normalScoreText != null)
         {
             normalScoreText.SetActive(false);
+        }
+        if (UpgradeText != null)
+        {
+            UpgradeText.SetActive(false);
         }
 
         // Stop all sounds
