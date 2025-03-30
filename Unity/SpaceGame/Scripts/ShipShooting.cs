@@ -1,16 +1,25 @@
-//This script allows ship to shoot the rocket prefab with a 0.5s delay between shots.
-//The shooting sound plays on shot.
-// Make sure to asign a firepoint and adjust its spawn location , i set mine to x=-0.1 ,y =0.15, z=0 with respect to the ship (it should be a child of it)
 using UnityEngine;
+using System.Collections.Generic;
 
 public class ShipShooting : MonoBehaviour
 {
     public GameObject weaponPrefab;
-    public Transform firePoint;
+    public Transform firePoint1; // Default fire point x=0 , y =0.35 with respect to the ship
+    public Transform firePoint2; // Unlocked on first upgrade x = -0.1 , y =0.15 with respect to ship
+    public Transform firePoint3; // Unlocked on second upgrade x = 0.1 , y =0.15 with respect to ship
+
+    private List<Transform> activeFirePoints = new List<Transform>();
     public float fireRate = 0.5f;
     private float nextFireTime = 0f;
 
     public AudioSource shootingSound;
+    private int upgradeLevel = 0;
+
+    void Start()
+    {
+        // Start with only the first fire point active
+        activeFirePoints.Add(firePoint1);
+    }
 
     void Update()
     {
@@ -23,41 +32,28 @@ public class ShipShooting : MonoBehaviour
 
     void FireWeapon()
     {
-        Instantiate(weaponPrefab, firePoint.position, Quaternion.identity);
+        foreach (Transform firePoint in activeFirePoints)
+        {
+            Instantiate(weaponPrefab, firePoint.position, Quaternion.identity);
+        }
 
         if (shootingSound != null)
         {
             shootingSound.Play();
         }
     }
-}
-using UnityEngine;
 
-public class ShipShooting : MonoBehaviour
-{
-    public GameObject weaponPrefab;
-    public Transform firePoint;
-    public float fireRate = 0.5f;
-    private float nextFireTime = 0f;
-
-    public AudioSource shootingSound;
-
-    void Update()
+    public void UpgradeWeapon()
     {
-        if ((Input.GetKeyDown(KeyCode.Return) || Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space)) && Time.time >= nextFireTime)
+        if (upgradeLevel == 0 && firePoint2 != null)
         {
-            FireWeapon();
-            nextFireTime = Time.time + fireRate;
+            activeFirePoints.Add(firePoint2);
+            upgradeLevel++;
         }
-    }
-
-    void FireWeapon()
-    {
-        Instantiate(weaponPrefab, firePoint.position, Quaternion.identity);
-
-        if (shootingSound != null)
+        else if (upgradeLevel == 1 && firePoint3 != null)
         {
-            shootingSound.Play();
+            activeFirePoints.Add(firePoint3);
+            upgradeLevel++;
         }
     }
 }
