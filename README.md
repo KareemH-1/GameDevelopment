@@ -20,7 +20,7 @@ A fast-paced space shooter where players must survive waves of enemies while try
 
 ## 🌟#2 Pong 3D (Made with Unity)
 
-![Game Screenshot](Unity\Pong3D\ScreenShots\Game.png) 
+![Game Screenshot](Unity/Pong3D/ScreenShots/Game.png) 
 
 ### 📌 Description
 A classic Pong experience reimagined in 3D, featuring competitive gameplay against another player or an AI opponent. This project expands on the fundamental Pong mechanics with enhanced features and robust game state management.
