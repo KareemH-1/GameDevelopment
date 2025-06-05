@@ -4,11 +4,11 @@ This is a simple Pong game, created using Unity.
 
 ## Screenshots
 
-![GamePlay](GameDevelopment\Unity\Pong3D\ScreenShots\Game.png)
+![GamePlay](Unity\Pong3D\ScreenShots\Game.png)
 
-![Main Menu](GameDevelopment\Unity\Pong3D\ScreenShots\MainMenu.png)
+![Main Menu](Unity\Pong3D\ScreenShots\MainMenu.png)
 
-![Pause Menu](GameDevelopment\Unity\Pong3D\ScreenShots\PauseMenu.png)
+![Pause Menu](Unity\Pong3D\ScreenShots\PauseMenu.png)
 
 ## About
 
