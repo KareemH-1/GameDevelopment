@@ -33,6 +33,9 @@ public class GameController : MonoBehaviour
 
     private bool wasBallMovingBeforePause = false;
 
+    private bool doPlayMusic = true;
+    public TextMeshProUGUI musicStatusText;
+    public TextMeshProUGUI musicStatusTextPause;
 
     void Start()
     {
@@ -70,7 +73,9 @@ public class GameController : MonoBehaviour
         gameStarted = false;
 
         PlayMusic(menuAudioSource, gameplayAudioSource);
+        UpdateMusicStatusText();
 
+        // Reset ball speed and Starter animator state when the scene first loads
         ballController.ResetSpeed();
         if (start != null)
         {
@@ -95,6 +100,14 @@ public class GameController : MonoBehaviour
 
     private void PlayMusic(AudioSource sourceToPlay, AudioSource sourceToStop)
     {
+        if (doPlayMusic == false)
+        {
+            if (sourceToStop != null && sourceToStop.isPlaying) sourceToStop.Stop();
+            if (sourceToPlay != null && sourceToPlay.isPlaying) sourceToPlay.Stop();
+            UpdateMusicStatusText();
+            return;
+        }
+
         if (sourceToStop != null && sourceToStop.isPlaying)
         {
             sourceToStop.Stop();
@@ -104,6 +117,7 @@ public class GameController : MonoBehaviour
         {
             sourceToPlay.Play();
         }
+        UpdateMusicStatusText();
     }
 
     public void PauseGame()
@@ -122,6 +136,7 @@ public class GameController : MonoBehaviour
         }
 
         PlayMusic(menuAudioSource, gameplayAudioSource);
+        UpdateMusicStatusText();
         Debug.Log("Game Paused");
     }
 
@@ -146,6 +161,7 @@ public class GameController : MonoBehaviour
         {
             PlayMusic(menuAudioSource, gameplayAudioSource);
         }
+        UpdateMusicStatusText();
         Debug.Log("Game Resumed");
     }
 
@@ -173,7 +189,8 @@ public class GameController : MonoBehaviour
         }
 
         PlayMusic(menuAudioSource, gameplayAudioSource);
-
+        UpdateMusicStatusText();
+        // Reset ball speed and Starter animator state when returning to main menu
         ballController.ResetSpeed();
         if (start != null)
         {
@@ -181,6 +198,32 @@ public class GameController : MonoBehaviour
         }
 
         Debug.Log("Returned to Main Menu");
+    }
+
+    private void UpdateMusicStatusText()
+    {
+        if (musicStatusText != null)
+        {
+            bool musicIsPlayingCurrently = (menuAudioSource != null && menuAudioSource.isPlaying) ||
+                                                (gameplayAudioSource != null && gameplayAudioSource.isPlaying);
+
+
+            string statusText = "Music: Off"; // Default to Off
+            if (doPlayMusic && musicIsPlayingCurrently)
+            {
+                statusText = "Music: On";
+            }
+
+            // Apply the status text to both UI elements if they are assigned
+            if (musicStatusText != null)
+            {
+                musicStatusText.text = statusText;
+            }
+            if (musicStatusTextPause != null)
+            {
+                musicStatusTextPause.text = statusText; // This was the line that needed correction
+            }
+        }
     }
 
     public void ScoreGoalLeft()
@@ -191,7 +234,7 @@ public class GameController : MonoBehaviour
         Debug.Log("Left Goal Scored! Current Score: " + scoreLeft);
         UpdateUI();
         PlayGoalSound();
-        ballController.IncreaseSpeed(); 
+        ballController.IncreaseSpeed(); // <--- Increase speed after a goal
         ResetBallForNewPoint();
     }
 
@@ -203,7 +246,7 @@ public class GameController : MonoBehaviour
         Debug.Log("Right Goal Scored! Current Score: " + scoreRight);
         UpdateUI();
         PlayGoalSound();
-        ballController.IncreaseSpeed();
+        ballController.IncreaseSpeed(); // <--- Increase speed after a goal
         ResetBallForNewPoint();
     }
 
@@ -235,6 +278,8 @@ public class GameController : MonoBehaviour
         {
             audioSourceStart.PlayOneShot(startSoundClip);
         }
+        // No speed increase here. ballController.StartNewPoint() will use the currentSpeed
+        // which was set to initialSpeed by ResetSpeed() when the game mode was chosen.
         ballController.StartNewPoint();
 
         PlayMusic(gameplayAudioSource, menuAudioSource);
@@ -261,7 +306,7 @@ public class GameController : MonoBehaviour
         UpdateUI();
         ballController.stop();
         ball.transform.position = startingPosition;
-        ballController.ResetSpeed(); 
+        ballController.ResetSpeed(); // <--- Reset speed to initial when starting a new game
         start.StartCountdown();
     }
 
@@ -285,7 +330,56 @@ public class GameController : MonoBehaviour
         UpdateUI();
         ballController.stop();
         ball.transform.position = startingPosition;
-        ballController.ResetSpeed();
+        ballController.ResetSpeed(); // <--- Reset speed to initial when starting a new game
         start.StartCountdown();
+    }
+
+
+    public void changeMusicMode()
+    {
+
+        doPlayMusic = !doPlayMusic; // Toggles the boolean
+
+        if (doPlayMusic == false)
+        {
+            // If music is now off, stop any playing music
+            if (gameplayAudioSource != null && gameplayAudioSource.isPlaying)
+            {
+                gameplayAudioSource.Stop();
+            }
+            if (menuAudioSource != null && menuAudioSource.isPlaying)
+            {
+                menuAudioSource.Stop();
+            }
+        }
+        else
+        {
+            // If music is now on, resume based on game state
+            if (gameStarted)
+            {
+                PlayMusic(gameplayAudioSource, menuAudioSource);
+            }
+            else
+            {
+                PlayMusic(menuAudioSource, gameplayAudioSource);
+            }
+        }
+        UpdateMusicStatusText(); // Update the UI texts after the change
+    }
+
+
+    public void QuitGame()
+    {
+        Debug.Log("Quitting game...");
+
+        // This line only works when the game is built (e.g., as a standalone executable).
+        // It will not do anything when running in the Unity Editor.
+        Application.Quit();
+
+        // If running in the Unity Editor, stop playing (for testing purposes).
+        // This part will be ignored when the game is built.
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #endif
     }
 }

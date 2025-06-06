@@ -23,10 +23,11 @@ All the core assets (e.g., sprites, original scripts) are from the tutorial.
 
 * **Increased Difficulty:** The ball speed increases over time, making the game more challenging as the player progresses.
 * **Menu and Pause Music:** Added background music that switches between menu and gameplay, enhancing the game's atmosphere.
+    * Added a music toggle button in both the main menu and pause menu to control the music.
 * **Main Menu Functionality:** Implemented a functional main menu to select game modes.
 * **Pause Menu:** Added a pause menu to allow players to pause and resume the game.
-* **Visuals:** Changed visuals , lighting and fog , added more sound effects.
-* **Player Vs. Ai** Implemented Player Vs. AI as it was not used in the video (only the logic of ai was written)
+* **Visuals:** Changed visuals, lighting and fog, added more sound effects.
+* **Player Vs. Ai:** Implemented Player Vs. AI as it was not used in the video (only the logic of ai was written).
 
 ## How to Play
 
@@ -34,5 +35,6 @@ Extract the .zip file attached and open the game.
 
 ## Controls
 
-Player Vs. Player : W and S for left | UpArrow and DownArrow for right
-Player Vs. Ai: UpArrow and DownArrow
+* **Player Vs. Player:** W and S for left | UpArrow and DownArrow for right
+* **Player Vs. AI:** W and S for left
+* **Music Toggle:** Click the "Music: On/Off" button in the main menu or pause menu to toggle the music.
