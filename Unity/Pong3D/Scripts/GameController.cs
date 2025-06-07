@@ -45,6 +45,11 @@ public class GameController : MonoBehaviour
     public TextMeshProUGUI winnerText;
     public Button returnToMainMenuButton;
 
+    public RacketController aiRacket;
+
+    // New: Reference to the AI Difficulty Selection Panel
+    public GameObject aiDifficultyPanel;
+
     void Start()
     {
         ballController = ball.GetComponent<BallController>();
@@ -78,6 +83,10 @@ public class GameController : MonoBehaviour
         {
             gameOverPanel.SetActive(false);
         }
+        if (aiDifficultyPanel != null) // New: Hide AI difficulty panel at start
+        {
+            aiDifficultyPanel.SetActive(false);
+        }
         if (returnToMainMenuButton != null)
         {
             returnToMainMenuButton.onClick.AddListener(ReturnToMainMenu);
@@ -95,6 +104,15 @@ public class GameController : MonoBehaviour
         if (start != null)
         {
             start.ResetAnimatorState();
+        }
+
+        if (aiRacket != null)
+        {
+            aiRacket.SetAIDifficulty("Normal");
+        }
+        else
+        {
+            Debug.LogError("AI Racket reference is not assigned in GameController!");
         }
     }
 
@@ -206,6 +224,10 @@ public class GameController : MonoBehaviour
         {
             gameOverPanel.SetActive(false);
         }
+        if (aiDifficultyPanel != null) // New: Hide AI difficulty panel when returning to main menu
+        {
+            aiDifficultyPanel.SetActive(false);
+        }
 
         PlayMusic(menuAudioSource, gameplayAudioSource);
         UpdateMusicStatusText();
@@ -251,7 +273,7 @@ public class GameController : MonoBehaviour
 
         UpdateUI();
         PlayGoalSound();
-        ballController.IncreaseSpeed();
+        ballController.IncreaseSpeed(1f);
         CheckWinCondition();
         if (!gameStarted) return;
         ResetBallForNewPoint();
@@ -266,7 +288,7 @@ public class GameController : MonoBehaviour
 
         UpdateUI();
         PlayGoalSound();
-        ballController.IncreaseSpeed();
+        ballController.IncreaseSpeed(1f);
         CheckWinCondition();
         if (!gameStarted) return;
         ResetBallForNewPoint();
@@ -314,6 +336,21 @@ public class GameController : MonoBehaviour
         ResumeGame();
     }
 
+    public void OpenAIDifficultyPanel()
+    {
+        if (gameModePanel != null)
+        {
+            gameModePanel.SetActive(false); // Hide the main game mode selection panel
+        }
+        if (aiDifficultyPanel != null)
+        {
+            aiDifficultyPanel.SetActive(true); // Show the AI difficulty selection panel
+        }
+        currentGameMode = "PvAI"; // Set game mode early
+        Debug.Log("AI Difficulty Panel Opened.");
+    }
+
+
     public void StartPlayerVsPlayerMode()
     {
         if (gameModePanel != null)
@@ -333,12 +370,11 @@ public class GameController : MonoBehaviour
         ResetGameState();
         start.StartCountdown();
     }
-
-    public void StartPlayerVsAIMode()
+    public void StartPlayerVsAIModeWithDifficulty(string difficulty)
     {
-        if (gameModePanel != null)
+        if (aiDifficultyPanel != null)
         {
-            gameModePanel.SetActive(false);
+            aiDifficultyPanel.SetActive(false); // Hide the difficulty panel
         }
 
         if (leftRacket != null)
@@ -349,10 +385,22 @@ public class GameController : MonoBehaviour
         {
             rightRacket.isPlayer = false;
         }
-        currentGameMode = "PvAI";
-        ResetGameState();
-        start.StartCountdown();
+
+        // Set the chosen AI difficulty
+        if (aiRacket != null)
+        {
+            aiRacket.SetAIDifficulty(difficulty);
+        }
+        else
+        {
+            Debug.LogError("AI Racket reference not set in GameController for difficulty setting!");
+        }
+
+        ResetGameState(); // Reset scores, ball position, and speed
+        start.StartCountdown(); // Start the game countdown
+        Debug.Log($"Player vs AI game started with difficulty: {difficulty}");
     }
+
 
     private void ResetGameState()
     {
@@ -422,13 +470,19 @@ public class GameController : MonoBehaviour
     {
         if (isInfiniteScore || !gameStarted) return;
 
+        string winner = "";
         if (scoreLeft >= targetScore)
         {
-            EndGame("AI");
+            winner = (currentGameMode == "PvP") ? "Right" : "AI";
         }
         else if (scoreRight >= targetScore)
         {
-            EndGame("Player");
+            winner = (currentGameMode == "PvP") ? "Left" : "Player";
+        }
+
+        if (!string.IsNullOrEmpty(winner))
+        {
+            EndGame(winner);
         }
     }
 

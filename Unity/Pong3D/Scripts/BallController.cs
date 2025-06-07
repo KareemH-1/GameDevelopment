@@ -3,7 +3,6 @@ using UnityEngine;
 public class BallController : MonoBehaviour
 {
     public float initialSpeed = 8f;
-    public float speedIncreasePerPoint = 1f;
     public float maxSpeed = 30f;
 
     private float currentSpeed;
@@ -91,6 +90,7 @@ public class BallController : MonoBehaviour
             direction = newDirection.normalized;
 
             ApplyBounceEffect();
+            IncreaseSpeed(0.2f);
         }
     }
 
@@ -135,10 +135,9 @@ public class BallController : MonoBehaviour
     {
         ChooseDirection();
         stopped = false;
-        ResetSpeed();
-    }
 
-    public void IncreaseSpeed()
+    }
+    public void IncreaseSpeed(float speedIncreasePerPoint)
     {
         currentSpeed = Mathf.Min(currentSpeed + speedIncreasePerPoint, maxSpeed);
         Debug.Log($"Ball speed increased to: {currentSpeed}");
