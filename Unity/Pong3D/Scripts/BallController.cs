@@ -2,14 +2,11 @@ using UnityEngine;
 
 public class BallController : MonoBehaviour
 {
-    // --- NEW SPEED VARIABLES ---
-    public float initialSpeed = 8f; 
-    public float speedIncreasePerPoint = 1f; // How much speed increases after each point
-    public float maxSpeed = 30f; // The maximum speed the ball can reach
+    public float initialSpeed = 8f;
+    public float speedIncreasePerPoint = 1f;
+    public float maxSpeed = 30f;
 
     private float currentSpeed;
-
-
     private Vector3 direction;
     public float minDirection = 0.5f;
     public bool stopped = true;
@@ -18,9 +15,20 @@ public class BallController : MonoBehaviour
     public AudioClip hitSoundClip;
     private AudioSource audioSource;
 
+    public float bounceDampening = 0.9f;
+    public float wallZMin = -7f;
+    public float wallZMax = 7f;
+
+    public float maxRacketBounceAngleFactor = 0.7f;
+
     void Start()
     {
         this.rb = GetComponent<Rigidbody>();
+
+        if (!rb.isKinematic)
+        {
+            rb.isKinematic = true;
+        }
 
         if (audioSource == null)
         {
@@ -28,7 +36,6 @@ public class BallController : MonoBehaviour
         }
         audioSource.playOnAwake = false;
 
-        // Initialize currentSpeed to the initial speed when the component starts
         currentSpeed = initialSpeed;
     }
 
@@ -38,45 +45,80 @@ public class BallController : MonoBehaviour
         {
             return;
         }
-        rb.MovePosition(rb.position + direction * currentSpeed * Time.fixedDeltaTime); // Use currentSpeed
+
+        rb.MovePosition(rb.position + direction * currentSpeed * Time.fixedDeltaTime);
+
+        if (rb.position.z < wallZMin)
+        {
+            direction.z = Mathf.Abs(direction.z);
+            transform.position = new Vector3(transform.position.x, transform.position.y, wallZMin);
+            ApplyBounceEffect();
+        }
+        else if (rb.position.z > wallZMax)
+        {
+            direction.z = -Mathf.Abs(direction.z);
+            transform.position = new Vector3(transform.position.x, transform.position.y, wallZMax);
+            ApplyBounceEffect();
+        }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        bool hit = false;
         if (other.CompareTag("Racket"))
         {
-            Vector3 newDirection = (transform.position - other.transform.position).normalized;
-            newDirection.x = Mathf.Sign(newDirection.x) * Mathf.Max(Mathf.Abs(newDirection.x), this.minDirection);
-            newDirection.z = Mathf.Sign(newDirection.z) * Mathf.Max(Mathf.Abs(newDirection.z), this.minDirection);
-            hit = true;
-            direction = newDirection;
-        }
-
-        if (other.CompareTag("Wall"))
-        {
-            hit = true;
-            direction.z = -direction.z;
-        }
-
-        if (hit)
-        {
-            GameObject spark = Instantiate(SparkVFX, transform.position, transform.rotation);
-            Destroy(spark, 4f);
-
-            if (hitSoundClip != null && audioSource != null)
+            Collider racketCollider = other.GetComponent<Collider>();
+            if (racketCollider == null)
             {
-                audioSource.PlayOneShot(hitSoundClip);
+                return;
             }
+
+            float hitPointZ = transform.position.z - other.transform.position.z;
+            float racketHalfLength = racketCollider.bounds.extents.z;
+            float normalizedHitZ = hitPointZ / racketHalfLength;
+
+            Vector3 newDirection = Vector3.zero;
+
+            newDirection.x = -direction.x;
+            newDirection.z = normalizedHitZ * maxRacketBounceAngleFactor;
+
+            newDirection.x = Mathf.Sign(newDirection.x) * Mathf.Max(Mathf.Abs(newDirection.x), this.minDirection);
+
+            if (Mathf.Abs(newDirection.z) < this.minDirection / 2f && normalizedHitZ == 0)
+            {
+                newDirection.z = (Random.value > 0.5f ? 1f : -1f) * (this.minDirection / 2f);
+            }
+
+            direction = newDirection.normalized;
+
+            ApplyBounceEffect();
+        }
+    }
+
+    private void ApplyBounceEffect()
+    {
+        GameObject spark = Instantiate(SparkVFX, transform.position, transform.rotation);
+        Destroy(spark, 4f);
+        PlayHitSound();
+    }
+
+    private void PlayHitSound()
+    {
+        if (hitSoundClip != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(hitSoundClip);
         }
     }
 
     private void ChooseDirection()
     {
-        float signX = Mathf.Sign(Random.Range(-1f, 1f));
-        float signZ = Mathf.Sign(Random.Range(-1f, 1f));
+        float signX = Random.value > 0.5f ? 1f : -1f;
+        float signZ = Random.value > 0.5f ? 1f : -1f;
 
-        this.direction = new Vector3(signX * 0.5f, 0, signZ * 0.5f);
+        this.direction = new Vector3(
+            signX * Random.Range(minDirection, 1f),
+            0,
+            signZ * Random.Range(minDirection, 1f)
+        ).normalized;
     }
 
     public void stop()
@@ -88,16 +130,18 @@ public class BallController : MonoBehaviour
     {
         stopped = false;
     }
+
     public void StartNewPoint()
     {
-        ChooseDirection(); // Choose a new random direction
-        stopped = false;    // Enable movement
+        ChooseDirection();
+        stopped = false;
+        ResetSpeed();
     }
 
     public void IncreaseSpeed()
     {
         currentSpeed = Mathf.Min(currentSpeed + speedIncreasePerPoint, maxSpeed);
-        Debug.Log($"Ball speed increased to: {currentSpeed}"); // Optional: for debugging
+        Debug.Log($"Ball speed increased to: {currentSpeed}");
     }
 
     public void ResetSpeed()

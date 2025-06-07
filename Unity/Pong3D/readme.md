@@ -1,40 +1,71 @@
 # Pong3D
 
-This is a simple Pong game, created using Unity.
+A modern take on the classic Pong game, built with Unity.
 
-## Screenshots
+## 📸 Screenshots
 
-![GamePlay](ScreenShots/Game.png)
+| Gameplay                          | Main Menu                              | Pause Menu                               |
+| --------------------------------- | -------------------------------------- | ---------------------------------------- |
+| ![GamePlay](ScreenShots/Game.png) | ![Main Menu](ScreenShots/MainMenu.png) | ![Pause Menu](ScreenShots/PauseMenu.png) |
 
-![Main Menu](ScreenShots/MainMenu.png)
+## 🧠 About
 
-![Pause Menu](ScreenShots/PauseMenu.png)
+This project started as a Unity tutorial but has since been significantly enhanced with new features, polished mechanics, and UI/UX improvements.
 
-## About
+### 🎓 Based on:
 
-This project was initially based on a Pong game tutorial. However, I have expanded upon the original tutorial by adding several features and improvements of my own.
+[How to Make a 3D Game with Unity in 1 Hour (Beginner Tutorial)](https://www.youtube.com/watch?v=b3xgCUlst88)
+All base assets (e.g., sprites, scripts) were sourced from the above tutorial.
 
-### Original Tutorial
+### 🛠️ My Contributions
 
-[How to make a 3D game with Unity in 1 hour | Beginner Tutorial | Easy](https://www.youtube.com/watch?v=b3xgCUlst88)
-All the core assets (e.g., sprites, original scripts) are from the tutorial.
+* **Progressive Difficulty:** Ball speed increases over time for added challenge.
+* **Audio Enhancements:**
 
-### My Contributions
+  * Background music added to menus and gameplay.
+  * Toggle music on/off via buttons in the main and pause menus.
+* **Menu System:**
 
-* **Increased Difficulty:** The ball speed increases over time, making the game more challenging as the player progresses.
-* **Menu and Pause Music:** Added background music that switches between menu and gameplay, enhancing the game's atmosphere.
-    * Added a music toggle button in both the main menu and pause menu to control the music.
-* **Main Menu Functionality:** Implemented a functional main menu to select game modes.
-* **Pause Menu:** Added a pause menu to allow players to pause and resume the game.
-* **Visuals:** Changed visuals, lighting and fog, added more sound effects.
-* **Player Vs. Ai:** Implemented Player Vs. AI as it was not used in the video (only the logic of ai was written).
+  * Fully functional main menu with game mode selection.
+  * Pause menu for resuming or exiting the game.
+* **Visual & Audio Polish:**
 
-## How to Play
+  * Updated lighting, fog, sound effects, and overall visuals.
+* **Player vs AI Mode:**
 
-Extract the .zip file attached and open the game.
+  * Implemented complete AI gameplay logic (only partially covered in the tutorial).
+* **Scoring & Victory Logic:**
 
-## Controls
+  * Fixed scoring bugs for both PvP and PvAI.
+  * Accurate winner detection regardless of paddle position or UI layout.
+* **End Screen Visuals:**
 
-* **Player Vs. Player:** W and S for left | UpArrow and DownArrow for right
-* **Player Vs. AI:** W and S for left
-* **Music Toggle:** Click the "Music: On/Off" button in the main menu or pause menu to toggle the music.
+  * Dynamic score coloring (winner: green, loser: red) on the game over screen.
+* **Navigation Improvements:**
+
+  * Fixed issue where returning to the main menu caused the application to close.
+* **Ball Control Enhancements:**
+
+  * Fine-tuned ball behavior during goals, pauses, and game state transitions.
+
+## ▶️ How to Play
+
+1. Download and extract the `.zip` file.
+2. Launch the executable to start the game.
+
+## 🎮 Controls
+
+* **Player vs Player:**
+
+  * Left Player: `W` / `S`
+  * Right Player: `↑` / `↓`
+
+* **Player vs AI:**
+
+  * Player: `W` / `S`
+
+* **Toggle Music:**
+
+  * Click the **"Music: On/Off"** button in the **Main Menu** or **Pause Menu**.
+
+

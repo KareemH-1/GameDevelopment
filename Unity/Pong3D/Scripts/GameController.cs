@@ -1,11 +1,13 @@
 using UnityEngine;
-using TMPro; // Assuming TextMeshPro is used for UI
+using TMPro;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
     public GameObject ball;
     public Starter start;
-    private BallController ballController; // Reference to the BallController
+    private BallController ballController;
     public TextMeshProUGUI scoreLeftText, scoreRightText;
     private int scoreLeft = 0, scoreRight = 0;
     private Vector3 startingPosition;
@@ -22,7 +24,6 @@ public class GameController : MonoBehaviour
     private AudioSource gameplayAudioSource;
     private AudioSource menuAudioSource;
 
-
     public GameObject gameModePanel;
     public RacketController leftRacket;
     public RacketController rightRacket;
@@ -36,6 +37,13 @@ public class GameController : MonoBehaviour
     private bool doPlayMusic = true;
     public TextMeshProUGUI musicStatusText;
     public TextMeshProUGUI musicStatusTextPause;
+
+    private int targetScore = -1;
+    private bool isInfiniteScore = true;
+    private string currentGameMode;
+    public GameObject gameOverPanel;
+    public TextMeshProUGUI winnerText;
+    public Button returnToMainMenuButton;
 
     void Start()
     {
@@ -66,6 +74,14 @@ public class GameController : MonoBehaviour
         {
             pauseMenuPanel.SetActive(false);
         }
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(false);
+        }
+        if (returnToMainMenuButton != null)
+        {
+            returnToMainMenuButton.onClick.AddListener(ReturnToMainMenu);
+        }
 
         ballController.stop();
         UpdateUI();
@@ -75,7 +91,6 @@ public class GameController : MonoBehaviour
         PlayMusic(menuAudioSource, gameplayAudioSource);
         UpdateMusicStatusText();
 
-        // Reset ball speed and Starter animator state when the scene first loads
         ballController.ResetSpeed();
         if (start != null)
         {
@@ -187,10 +202,13 @@ public class GameController : MonoBehaviour
         {
             pauseMenuPanel.SetActive(false);
         }
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(false);
+        }
 
         PlayMusic(menuAudioSource, gameplayAudioSource);
         UpdateMusicStatusText();
-        // Reset ball speed and Starter animator state when returning to main menu
         ballController.ResetSpeed();
         if (start != null)
         {
@@ -205,23 +223,21 @@ public class GameController : MonoBehaviour
         if (musicStatusText != null)
         {
             bool musicIsPlayingCurrently = (menuAudioSource != null && menuAudioSource.isPlaying) ||
-                                                (gameplayAudioSource != null && gameplayAudioSource.isPlaying);
+                                            (gameplayAudioSource != null && gameplayAudioSource.isPlaying);
 
-
-            string statusText = "Music: Off"; // Default to Off
+            string statusText = "Music: Off";
             if (doPlayMusic && musicIsPlayingCurrently)
             {
                 statusText = "Music: On";
             }
 
-            // Apply the status text to both UI elements if they are assigned
             if (musicStatusText != null)
             {
                 musicStatusText.text = statusText;
             }
             if (musicStatusTextPause != null)
             {
-                musicStatusTextPause.text = statusText; // This was the line that needed correction
+                musicStatusTextPause.text = statusText;
             }
         }
     }
@@ -230,11 +246,14 @@ public class GameController : MonoBehaviour
     {
         if (isPaused) return;
 
-        scoreLeft += 1;
-        Debug.Log("Left Goal Scored! Current Score: " + scoreLeft);
+        scoreRight += 1;
+        Debug.Log("Left Goal Scored! Score on Left UI (Player's score): " + scoreRight);
+
         UpdateUI();
         PlayGoalSound();
-        ballController.IncreaseSpeed(); // <--- Increase speed after a goal
+        ballController.IncreaseSpeed();
+        CheckWinCondition();
+        if (!gameStarted) return;
         ResetBallForNewPoint();
     }
 
@@ -242,18 +261,29 @@ public class GameController : MonoBehaviour
     {
         if (isPaused) return;
 
-        scoreRight += 1;
-        Debug.Log("Right Goal Scored! Current Score: " + scoreRight);
+        scoreLeft += 1;
+        Debug.Log("Right Goal Scored! Score on Right UI (AI's score): " + scoreLeft);
+
         UpdateUI();
         PlayGoalSound();
-        ballController.IncreaseSpeed(); // <--- Increase speed after a goal
+        ballController.IncreaseSpeed();
+        CheckWinCondition();
+        if (!gameStarted) return;
         ResetBallForNewPoint();
     }
 
     private void UpdateUI()
     {
-        scoreLeftText.text = scoreLeft.ToString();
-        scoreRightText.text = scoreRight.ToString();
+        if (scoreLeftText != null)
+        {
+            scoreLeftText.text = scoreRight.ToString();
+            scoreLeftText.color = Color.white;
+        }
+        if (scoreRightText != null)
+        {
+            scoreRightText.text = scoreLeft.ToString();
+            scoreRightText.color = Color.white;
+        }
     }
 
     private void PlayGoalSound()
@@ -278,8 +308,6 @@ public class GameController : MonoBehaviour
         {
             audioSourceStart.PlayOneShot(startSoundClip);
         }
-        // No speed increase here. ballController.StartNewPoint() will use the currentSpeed
-        // which was set to initialSpeed by ResetSpeed() when the game mode was chosen.
         ballController.StartNewPoint();
 
         PlayMusic(gameplayAudioSource, menuAudioSource);
@@ -301,12 +329,8 @@ public class GameController : MonoBehaviour
         {
             rightRacket.isPlayer = true;
         }
-        scoreLeft = 0;
-        scoreRight = 0;
-        UpdateUI();
-        ballController.stop();
-        ball.transform.position = startingPosition;
-        ballController.ResetSpeed(); // <--- Reset speed to initial when starting a new game
+        currentGameMode = "PvP";
+        ResetGameState();
         start.StartCountdown();
     }
 
@@ -325,24 +349,26 @@ public class GameController : MonoBehaviour
         {
             rightRacket.isPlayer = false;
         }
+        currentGameMode = "PvAI";
+        ResetGameState();
+        start.StartCountdown();
+    }
+
+    private void ResetGameState()
+    {
         scoreLeft = 0;
         scoreRight = 0;
         UpdateUI();
         ballController.stop();
         ball.transform.position = startingPosition;
-        ballController.ResetSpeed(); // <--- Reset speed to initial when starting a new game
-        start.StartCountdown();
+        ballController.ResetSpeed();
     }
-
 
     public void changeMusicMode()
     {
-
-        doPlayMusic = !doPlayMusic; // Toggles the boolean
-
+        doPlayMusic = !doPlayMusic;
         if (doPlayMusic == false)
         {
-            // If music is now off, stop any playing music
             if (gameplayAudioSource != null && gameplayAudioSource.isPlaying)
             {
                 gameplayAudioSource.Stop();
@@ -354,7 +380,6 @@ public class GameController : MonoBehaviour
         }
         else
         {
-            // If music is now on, resume based on game state
             if (gameStarted)
             {
                 PlayMusic(gameplayAudioSource, menuAudioSource);
@@ -364,22 +389,90 @@ public class GameController : MonoBehaviour
                 PlayMusic(menuAudioSource, gameplayAudioSource);
             }
         }
-        UpdateMusicStatusText(); // Update the UI texts after the change
+        UpdateMusicStatusText();
     }
-
 
     public void QuitGame()
     {
         Debug.Log("Quitting game...");
-
-        // This line only works when the game is built (e.g., as a standalone executable).
-        // It will not do anything when running in the Unity Editor.
         Application.Quit();
-
-        // If running in the Unity Editor, stop playing (for testing purposes).
-        // This part will be ignored when the game is built.
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
-        #endif
+#endif
+    }
+
+    public void SetTargetScore(string scoreText)
+    {
+        Debug.Log($"SetTargetScore called. Received: '{scoreText}'");
+
+        if (int.TryParse(scoreText, out int parsedScore) && parsedScore > 0)
+        {
+            targetScore = parsedScore;
+            isInfiniteScore = false;
+        }
+        else
+        {
+            targetScore = -1;
+            isInfiniteScore = true;
+        }
+        Debug.Log("Target score set to: " + targetScore + " (Is Infinite: " + isInfiniteScore + ")");
+    }
+
+    private void CheckWinCondition()
+    {
+        if (isInfiniteScore || !gameStarted) return;
+
+        if (scoreLeft >= targetScore)
+        {
+            EndGame("AI");
+        }
+        else if (scoreRight >= targetScore)
+        {
+            EndGame("Player");
+        }
+    }
+
+    private void EndGame(string winnerIdentifier)
+    {
+        gameStarted = false;
+        ballController.stop();
+
+        string winnerMessage = "";
+        Color winnerColor = Color.green;
+        Color loserColor = Color.red;
+
+        if (currentGameMode == "PvP")
+        {
+            if (winnerIdentifier == "Left")
+            {
+                winnerMessage = "Left Won!";
+                scoreRightText.color = winnerColor;
+                scoreLeftText.color = loserColor;
+            }
+            else
+            {
+                winnerMessage = "Right Won!";
+                scoreRightText.color = loserColor;
+                scoreLeftText.color = winnerColor;
+            }
+        }
+        else
+        {
+            if (winnerIdentifier == "Player")
+            {
+                winnerMessage = "You Won!";
+                scoreLeftText.color = Color.green;
+                scoreRightText.color = Color.red;
+            }
+            else
+            {
+                winnerMessage = "You Lost!";
+                scoreLeftText.color = Color.red;
+                scoreRightText.color = Color.green;
+            }
+        }
+
+        winnerText.text = winnerMessage;
+        gameOverPanel.SetActive(true);
     }
 }
