@@ -86,7 +86,7 @@ All base assets (e.g., sprites, scripts) were sourced from the above tutorial.
 
 * **Player vs AI:**
 
-  * Player: `W` / `S`
+  * Player: `↑` / `↓`
 
 * **Toggle Music:**
 

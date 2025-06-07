@@ -64,4 +64,8 @@ GitHub: [@KareemH-1](https://github.com/KareemH-1)
 
 ## 📜 License
 
-This project collection is licensed under the **MIT License**. You are free to use, modify, and distribute these projects with appropriate attribution.
+This project collection is licensed under the **MIT License**. You’re free to use, modify, and share these projects with proper attribution.
+
+---
+
+Let me know if you'd like a version with badges, project folders linked, or deployment instructions for `.exe` builds or WebGL exports.
