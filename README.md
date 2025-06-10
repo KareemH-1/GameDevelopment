@@ -39,6 +39,7 @@ A 3D reimagining of the classic Pong game, featuring both Player vs Player and P
 * 🧑‍🤝‍🧑 **Local Multiplayer** – Classic 1v1 gameplay
 * ⏸ **Pause Menu** – Easily resume, return to menu, or quit
 * 🏠 **Main Menu** – Game mode selection and music toggling
+* 🏠 **More menus for custom gameplay** – choose Ai difficulty , Choose Target score
 * 🎶 **Dynamic Music System** – Music transitions between menus and gameplay
 * 🏁 **Victory Logic** – Accurate win/loss detection with styled end screens
 

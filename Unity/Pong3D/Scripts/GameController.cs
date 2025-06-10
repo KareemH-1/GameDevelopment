@@ -41,14 +41,18 @@ public class GameController : MonoBehaviour
     private int targetScore = -1;
     private bool isInfiniteScore = true;
     private string currentGameMode;
+
     public GameObject gameOverPanel;
     public TextMeshProUGUI winnerText;
     public Button returnToMainMenuButton;
 
     public RacketController aiRacket;
 
-    // New: Reference to the AI Difficulty Selection Panel
     public GameObject aiDifficultyPanel;
+
+    public GameObject scoreSelectionPanel;
+    public TMP_InputField scoreInputField;
+
 
     void Start()
     {
@@ -71,48 +75,25 @@ public class GameController : MonoBehaviour
         menuAudioSource.playOnAwake = false;
         menuAudioSource.clip = menuMusicClip;
 
-        if (gameModePanel != null)
-        {
-            gameModePanel.SetActive(true);
-        }
-        if (pauseMenuPanel != null)
-        {
-            pauseMenuPanel.SetActive(false);
-        }
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(false);
-        }
-        if (aiDifficultyPanel != null) // New: Hide AI difficulty panel at start
-        {
-            aiDifficultyPanel.SetActive(false);
-        }
+        if (gameModePanel != null) { gameModePanel.SetActive(true); }
+        if (pauseMenuPanel != null) { pauseMenuPanel.SetActive(false); }
+        if (gameOverPanel != null) { gameOverPanel.SetActive(false); }
+        if (aiDifficultyPanel != null) { aiDifficultyPanel.SetActive(false); }
+        if (scoreSelectionPanel != null) { scoreSelectionPanel.SetActive(false); }
+
         if (returnToMainMenuButton != null)
         {
             returnToMainMenuButton.onClick.AddListener(ReturnToMainMenu);
         }
 
-        ballController.stop();
-        UpdateUI();
-        Time.timeScale = 1f;
-        gameStarted = false;
+        ResetFullGameState();
 
         PlayMusic(menuAudioSource, gameplayAudioSource);
         UpdateMusicStatusText();
 
-        ballController.ResetSpeed();
-        if (start != null)
+        if (aiRacket == null)
         {
-            start.ResetAnimatorState();
-        }
-
-        if (aiRacket != null)
-        {
-            aiRacket.SetAIDifficulty("Normal");
-        }
-        else
-        {
-            Debug.LogError("AI Racket reference is not assigned in GameController!");
+            Debug.LogError("AI Racket reference is not assigned in GameController! Please assign it in the Inspector.");
         }
     }
 
@@ -200,17 +181,7 @@ public class GameController : MonoBehaviour
 
     public void ReturnToMainMenu()
     {
-        scoreLeft = 0;
-        scoreRight = 0;
-        UpdateUI();
-
-        ballController.stop();
-        ball.transform.position = startingPosition;
-
-        Time.timeScale = 1f;
-        isPaused = false;
-        gameStarted = false;
-        wasBallMovingBeforePause = false;
+        ResetFullGameState();
 
         if (gameModePanel != null)
         {
@@ -224,28 +195,51 @@ public class GameController : MonoBehaviour
         {
             gameOverPanel.SetActive(false);
         }
-        if (aiDifficultyPanel != null) // New: Hide AI difficulty panel when returning to main menu
+        if (aiDifficultyPanel != null)
         {
             aiDifficultyPanel.SetActive(false);
+        }
+        if (scoreSelectionPanel != null)
+        {
+            scoreSelectionPanel.SetActive(false);
         }
 
         PlayMusic(menuAudioSource, gameplayAudioSource);
         UpdateMusicStatusText();
+
+        Debug.Log("Returned to Main Menu");
+    }
+
+    private void ResetFullGameState()
+    {
+        scoreLeft = 0;
+        scoreRight = 0;
+        UpdateUI();
+
+        ballController.stop();
+        ball.transform.position = startingPosition;
         ballController.ResetSpeed();
+
         if (start != null)
         {
             start.ResetAnimatorState();
         }
 
-        Debug.Log("Returned to Main Menu");
+        Time.timeScale = 1f;
+        isPaused = false;
+        gameStarted = false;
+        wasBallMovingBeforePause = false;
+
+        if (leftRacket != null) { leftRacket.isPlayer = true; }
     }
+
 
     private void UpdateMusicStatusText()
     {
         if (musicStatusText != null)
         {
             bool musicIsPlayingCurrently = (menuAudioSource != null && menuAudioSource.isPlaying) ||
-                                            (gameplayAudioSource != null && gameplayAudioSource.isPlaying);
+                                           (gameplayAudioSource != null && gameplayAudioSource.isPlaying);
 
             string statusText = "Music: Off";
             if (doPlayMusic && musicIsPlayingCurrently)
@@ -266,7 +260,7 @@ public class GameController : MonoBehaviour
 
     public void ScoreGoalLeft()
     {
-        if (isPaused) return;
+        if (isPaused || !gameStarted) return;
 
         scoreRight += 1;
         Debug.Log("Left Goal Scored! Score on Left UI (Player's score): " + scoreRight);
@@ -275,13 +269,15 @@ public class GameController : MonoBehaviour
         PlayGoalSound();
         ballController.IncreaseSpeed(1f);
         CheckWinCondition();
-        if (!gameStarted) return;
-        ResetBallForNewPoint();
+        if (gameStarted)
+        {
+            ResetBallForNewPoint();
+        }
     }
 
     public void ScoreGoalRight()
     {
-        if (isPaused) return;
+        if (isPaused || !gameStarted) return;
 
         scoreLeft += 1;
         Debug.Log("Right Goal Scored! Score on Right UI (AI's score): " + scoreLeft);
@@ -290,8 +286,10 @@ public class GameController : MonoBehaviour
         PlayGoalSound();
         ballController.IncreaseSpeed(1f);
         CheckWinCondition();
-        if (!gameStarted) return;
-        ResetBallForNewPoint();
+        if (gameStarted)
+        {
+            ResetBallForNewPoint();
+        }
     }
 
     private void UpdateUI()
@@ -299,13 +297,13 @@ public class GameController : MonoBehaviour
         if (scoreLeftText != null)
         {
             scoreLeftText.text = scoreRight.ToString();
-            scoreLeftText.color = Color.white;
         }
         if (scoreRightText != null)
         {
             scoreRightText.text = scoreLeft.ToString();
-            scoreRightText.color = Color.white;
         }
+        scoreLeftText.color = Color.white;
+        scoreRightText.color = Color.white;
     }
 
     private void PlayGoalSound()
@@ -331,7 +329,6 @@ public class GameController : MonoBehaviour
             audioSourceStart.PlayOneShot(startSoundClip);
         }
         ballController.StartNewPoint();
-
         PlayMusic(gameplayAudioSource, menuAudioSource);
         ResumeGame();
     }
@@ -340,16 +337,14 @@ public class GameController : MonoBehaviour
     {
         if (gameModePanel != null)
         {
-            gameModePanel.SetActive(false); // Hide the main game mode selection panel
+            gameModePanel.SetActive(false);
         }
         if (aiDifficultyPanel != null)
         {
-            aiDifficultyPanel.SetActive(true); // Show the AI difficulty selection panel
+            aiDifficultyPanel.SetActive(true);
         }
-        currentGameMode = "PvAI"; // Set game mode early
         Debug.Log("AI Difficulty Panel Opened.");
     }
-
 
     public void StartPlayerVsPlayerMode()
     {
@@ -358,35 +353,38 @@ public class GameController : MonoBehaviour
             gameModePanel.SetActive(false);
         }
 
-        if (leftRacket != null)
-        {
-            leftRacket.isPlayer = true;
-        }
-        if (rightRacket != null)
-        {
-            rightRacket.isPlayer = true;
-        }
+        if (leftRacket != null) { leftRacket.isPlayer = true; }
+        if (rightRacket != null) { rightRacket.isPlayer = true; }
+
         currentGameMode = "PvP";
-        ResetGameState();
-        start.StartCountdown();
+        ResetFullGameState();
+
+        if (scoreSelectionPanel != null)
+        {
+            scoreSelectionPanel.SetActive(true);
+        }
+        if (scoreInputField != null)
+        {
+            scoreInputField.text = "";
+        }
+
+        Debug.Log("Player Vs Player mode selected. Showing score selection.");
     }
+
     public void StartPlayerVsAIModeWithDifficulty(string difficulty)
     {
         if (aiDifficultyPanel != null)
         {
-            aiDifficultyPanel.SetActive(false); // Hide the difficulty panel
+            aiDifficultyPanel.SetActive(false);
+        }
+        if (gameModePanel != null)
+        {
+            gameModePanel.SetActive(false);
         }
 
-        if (leftRacket != null)
-        {
-            leftRacket.isPlayer = true;
-        }
-        if (rightRacket != null)
-        {
-            rightRacket.isPlayer = false;
-        }
+        if (leftRacket != null) { leftRacket.isPlayer = true; }
+        if (rightRacket != null) { rightRacket.isPlayer = false; }
 
-        // Set the chosen AI difficulty
         if (aiRacket != null)
         {
             aiRacket.SetAIDifficulty(difficulty);
@@ -396,20 +394,52 @@ public class GameController : MonoBehaviour
             Debug.LogError("AI Racket reference not set in GameController for difficulty setting!");
         }
 
-        ResetGameState(); // Reset scores, ball position, and speed
-        start.StartCountdown(); // Start the game countdown
-        Debug.Log($"Player vs AI game started with difficulty: {difficulty}");
+        currentGameMode = "PvAI";
+        ResetFullGameState();
+
+        if (scoreSelectionPanel != null)
+        {
+            scoreSelectionPanel.SetActive(true);
+        }
+        if (scoreInputField != null)
+        {
+            scoreInputField.text = "";
+        }
+
+        Debug.Log($"Player vs AI game selected with difficulty: {difficulty}. Showing score selection.");
     }
 
-
-    private void ResetGameState()
+    public void ConfirmScoreAndStartGame()
     {
-        scoreLeft = 0;
-        scoreRight = 0;
-        UpdateUI();
-        ballController.stop();
-        ball.transform.position = startingPosition;
-        ballController.ResetSpeed();
+        string scoreText = scoreInputField.text;
+        SetTargetScore(scoreText);
+
+        if (scoreSelectionPanel != null)
+        {
+            scoreSelectionPanel.SetActive(false);
+        }
+
+        start.StartCountdown();
+        Debug.Log($"Starting game with custom target score: {(isInfiniteScore ? "Infinite" : targetScore.ToString())}");
+    }
+
+    public void SetInputAndConfirmScore(string scoreValue)
+    {
+        if (scoreInputField != null)
+        {
+            scoreInputField.text = scoreValue;
+        }
+        ConfirmScoreAndStartGame();
+    }
+
+    public void ReturnToMainMenuFromScoreSelection()
+    {
+        ReturnToMainMenu();
+        if (scoreInputField != null)
+        {
+            scoreInputField.text = "";
+        }
+        Debug.Log("Returning to Main Menu from Score Selection.");
     }
 
     public void changeMusicMode()
@@ -471,13 +501,13 @@ public class GameController : MonoBehaviour
         if (isInfiniteScore || !gameStarted) return;
 
         string winner = "";
-        if (scoreLeft >= targetScore)
+        if (scoreRight >= targetScore)
         {
-            winner = (currentGameMode == "PvP") ? "Right" : "AI";
+            winner = (currentGameMode == "PvP") ? "Right" : "Player";
         }
-        else if (scoreRight >= targetScore)
+        else if (scoreLeft >= targetScore)
         {
-            winner = (currentGameMode == "PvP") ? "Left" : "Player";
+            winner = (currentGameMode == "PvP") ? "Left" : "AI";
         }
 
         if (!string.IsNullOrEmpty(winner))
@@ -490,43 +520,70 @@ public class GameController : MonoBehaviour
     {
         gameStarted = false;
         ballController.stop();
+        Time.timeScale = 0f;
 
         string winnerMessage = "";
         Color winnerColor = Color.green;
         Color loserColor = Color.red;
 
+        if (scoreLeftText != null) scoreLeftText.color = Color.white;
+        if (scoreRightText != null) scoreRightText.color = Color.white;
+
+
         if (currentGameMode == "PvP")
         {
-            if (winnerIdentifier == "Left")
+            if (scoreLeft >= targetScore)
             {
-                winnerMessage = "Left Won!";
-                scoreRightText.color = winnerColor;
-                scoreLeftText.color = loserColor;
+                winnerMessage = "Left Player Won!";
+                if (scoreLeftText != null) scoreLeftText.color = loserColor;
+                if (scoreRightText != null) scoreRightText.color = winnerColor;
+            }
+            else if (scoreRight >= targetScore)
+            {
+                winnerMessage = "Right Player Won!";
+                if (scoreLeftText != null) scoreLeftText.color = winnerColor;
+                if (scoreRightText != null) scoreRightText.color = loserColor;
             }
             else
             {
-                winnerMessage = "Right Won!";
-                scoreRightText.color = loserColor;
-                scoreLeftText.color = winnerColor;
+                winnerMessage = "Game Ended!";
             }
         }
         else
         {
-            if (winnerIdentifier == "Player")
+            if (scoreLeft >= targetScore)
             {
                 winnerMessage = "You Won!";
-                scoreLeftText.color = Color.green;
-                scoreRightText.color = Color.red;
+                if (scoreLeftText != null) scoreLeftText.color = loserColor;
+                if (scoreRightText != null) scoreRightText.color = winnerColor;
+            }
+            else if (scoreRight >= targetScore)
+            {
+                winnerMessage = "You Lost!";
+                if (scoreLeftText != null) scoreLeftText.color = winnerColor;
+                if (scoreRightText != null) scoreRightText.color = loserColor;
             }
             else
             {
-                winnerMessage = "You Lost!";
-                scoreLeftText.color = Color.red;
-                scoreRightText.color = Color.green;
+                winnerMessage = "Game Ended!";
             }
         }
 
-        winnerText.text = winnerMessage;
-        gameOverPanel.SetActive(true);
+        if (winnerText != null)
+        {
+            winnerText.text = winnerMessage;
+        }
+
+        if (pauseMenuPanel != null) { pauseMenuPanel.SetActive(false); }
+        if (gameModePanel != null) { gameModePanel.SetActive(false); }
+        if (aiDifficultyPanel != null) { aiDifficultyPanel.SetActive(false); }
+        if (scoreSelectionPanel != null) { scoreSelectionPanel.SetActive(false); }
+
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(true);
+        }
+
+        PlayMusic(menuAudioSource, gameplayAudioSource);
     }
 }

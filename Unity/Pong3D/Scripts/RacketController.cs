@@ -30,8 +30,11 @@ public class RacketController : MonoBehaviour
 
     private float lastMoveTime;
 
+    public RacketController otherPlayer;
+    
     private Rigidbody rb;
     private Transform ball;
+
     private BallController ballController;
 
 
@@ -65,6 +68,11 @@ public class RacketController : MonoBehaviour
         }
     }
 
+    public int isPlayerOther()
+    {
+        if(isPlayer == false) return 1;
+        else return 2;
+    }
     public void SetAIDifficulty(string difficulty)
     {
         currentAIDifficulty = difficulty;
@@ -126,11 +134,19 @@ public class RacketController : MonoBehaviour
         bool pressedUp = Input.GetKey(this.up);
         bool pressedDown = Input.GetKey(this.down);
 
-        if (pressedUp)
+        bool pressedUp2= false;
+        bool pressedDown2 = false;
+        if (otherPlayer.isPlayerOther() == 1)
+        {
+           pressedUp2 = Input.GetKey(KeyCode.W);
+           pressedDown2 = Input.GetKey(KeyCode.S);
+
+        }
+        if (pressedUp || pressedUp2)
         {
             rb.linearVelocity = Vector3.forward * playerSpeed;
         }
-        else if (pressedDown)
+        else if (pressedDown || pressedDown2)
         {
             rb.linearVelocity = Vector3.forward * -playerSpeed;
         }
