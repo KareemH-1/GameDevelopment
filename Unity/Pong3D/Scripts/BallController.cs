@@ -135,17 +135,22 @@ public class BallController : MonoBehaviour
     {
         ChooseDirection();
         stopped = false;
-
     }
+
     public void IncreaseSpeed(float speedIncreasePerPoint)
     {
         currentSpeed = Mathf.Min(currentSpeed + speedIncreasePerPoint, maxSpeed);
-        Debug.Log($"Ball speed increased to: {currentSpeed}");
+        Debug.Log("Current Speed: " + currentSpeed);
     }
 
     public void ResetSpeed()
     {
         currentSpeed = initialSpeed;
-        Debug.Log($"Ball speed reset to initial: {currentSpeed}");
+    }
+
+    public void SetInitialSpeed(float speed)
+    {
+        initialSpeed = speed;
+        currentSpeed = initialSpeed;
     }
 }

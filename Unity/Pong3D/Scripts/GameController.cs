@@ -1,7 +1,6 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
@@ -45,6 +44,7 @@ public class GameController : MonoBehaviour
     public GameObject gameOverPanel;
     public TextMeshProUGUI winnerText;
     public Button returnToMainMenuButton;
+    public Button playAgainButton;
 
     public RacketController aiRacket;
 
@@ -52,6 +52,28 @@ public class GameController : MonoBehaviour
 
     public GameObject scoreSelectionPanel;
     public TMP_InputField scoreInputField;
+    public Button confirmScoreButton;
+
+    public Toggle speedResetToggle;
+    private bool resetBallSpeedAfterGoal = true;
+
+    private int _previousTargetScore;
+    private bool _previousIsInfiniteScore;
+    private bool _previousResetBallSpeedAfterGoal;
+    private string _previousGameMode;
+    private string _previousAIDifficulty;
+    private float _previousInitialBallSpeed;
+
+    public Button slowSpeedButton;
+    public Button normalSpeedButton;
+    public Button fastSpeedButton;
+
+    public Button score1Button;
+    public Button score3Button;
+    public Button score5Button;
+    public Button score10Button;
+    public Button score15Button;
+    public Button scoreInfiniteButton;
 
 
     void Start()
@@ -86,6 +108,35 @@ public class GameController : MonoBehaviour
             returnToMainMenuButton.onClick.AddListener(ReturnToMainMenu);
         }
 
+        if (playAgainButton != null)
+        {
+            playAgainButton.onClick.AddListener(PlayAgain);
+        }
+
+        if (speedResetToggle != null)
+        {
+            speedResetToggle.onValueChanged.RemoveAllListeners();
+            speedResetToggle.onValueChanged.AddListener(SetBallSpeedResetAfterGoal);
+        }
+
+        SetBallSpeedResetAfterGoal(true);
+
+        if (slowSpeedButton != null) slowSpeedButton.onClick.AddListener(() => SetInitialBallSpeed(7f));
+        if (normalSpeedButton != null) normalSpeedButton.onClick.AddListener(() => SetInitialBallSpeed(11f));
+        if (fastSpeedButton != null) fastSpeedButton.onClick.AddListener(() => SetInitialBallSpeed(16f));
+
+        if (confirmScoreButton != null)
+        {
+            confirmScoreButton.onClick.AddListener(ConfirmScoreAndStartGame);
+        }
+
+        if (score1Button != null) score1Button.onClick.AddListener(() => SetTargetScore("1"));
+        if (score3Button != null) score3Button.onClick.AddListener(() => SetTargetScore("3"));
+        if (score5Button != null) score5Button.onClick.AddListener(() => SetTargetScore("5"));
+        if (score10Button != null) score10Button.onClick.AddListener(() => SetTargetScore("10"));
+        if (score15Button != null) score15Button.onClick.AddListener(() => SetTargetScore("15"));
+        if (scoreInfiniteButton != null) scoreInfiniteButton.onClick.AddListener(() => SetTargetScore("infinite"));
+
         ResetFullGameState();
 
         PlayMusic(menuAudioSource, gameplayAudioSource);
@@ -93,7 +144,7 @@ public class GameController : MonoBehaviour
 
         if (aiRacket == null)
         {
-            Debug.LogError("AI Racket reference is not assigned in GameController! Please assign it in the Inspector.");
+
         }
     }
 
@@ -151,7 +202,6 @@ public class GameController : MonoBehaviour
 
         PlayMusic(menuAudioSource, gameplayAudioSource);
         UpdateMusicStatusText();
-        Debug.Log("Game Paused");
     }
 
     public void ResumeGame()
@@ -176,7 +226,6 @@ public class GameController : MonoBehaviour
             PlayMusic(menuAudioSource, gameplayAudioSource);
         }
         UpdateMusicStatusText();
-        Debug.Log("Game Resumed");
     }
 
     public void ReturnToMainMenu()
@@ -206,8 +255,6 @@ public class GameController : MonoBehaviour
 
         PlayMusic(menuAudioSource, gameplayAudioSource);
         UpdateMusicStatusText();
-
-        Debug.Log("Returned to Main Menu");
     }
 
     private void ResetFullGameState()
@@ -219,6 +266,7 @@ public class GameController : MonoBehaviour
         ballController.stop();
         ball.transform.position = startingPosition;
         ballController.ResetSpeed();
+        SetBallSpeedResetAfterGoal(true);
 
         if (start != null)
         {
@@ -232,7 +280,6 @@ public class GameController : MonoBehaviour
 
         if (leftRacket != null) { leftRacket.isPlayer = true; }
     }
-
 
     private void UpdateMusicStatusText()
     {
@@ -263,7 +310,6 @@ public class GameController : MonoBehaviour
         if (isPaused || !gameStarted) return;
 
         scoreRight += 1;
-        Debug.Log("Left Goal Scored! Score on Left UI (Player's score): " + scoreRight);
 
         UpdateUI();
         PlayGoalSound();
@@ -280,7 +326,6 @@ public class GameController : MonoBehaviour
         if (isPaused || !gameStarted) return;
 
         scoreLeft += 1;
-        Debug.Log("Right Goal Scored! Score on Right UI (AI's score): " + scoreLeft);
 
         UpdateUI();
         PlayGoalSound();
@@ -318,11 +363,26 @@ public class GameController : MonoBehaviour
     {
         ballController.stop();
         ball.transform.position = startingPosition;
+        if (resetBallSpeedAfterGoal)
+        {
+            ballController.ResetSpeed();
+        }
+
         start.StartCountdown();
     }
 
     public void StartGame()
     {
+        _previousTargetScore = targetScore;
+        _previousIsInfiniteScore = isInfiniteScore;
+        _previousResetBallSpeedAfterGoal = resetBallSpeedAfterGoal;
+        _previousGameMode = currentGameMode;
+        if (aiRacket != null)
+        {
+            _previousAIDifficulty = aiRacket.currentAIDifficulty;
+        }
+        _previousInitialBallSpeed = ballController.initialSpeed;
+
         gameStarted = true;
         if (startSoundClip != null && audioSourceStart != null)
         {
@@ -343,7 +403,6 @@ public class GameController : MonoBehaviour
         {
             aiDifficultyPanel.SetActive(true);
         }
-        Debug.Log("AI Difficulty Panel Opened.");
     }
 
     public void StartPlayerVsPlayerMode()
@@ -363,12 +422,8 @@ public class GameController : MonoBehaviour
         {
             scoreSelectionPanel.SetActive(true);
         }
-        if (scoreInputField != null)
-        {
-            scoreInputField.text = "";
-        }
-
-        Debug.Log("Player Vs Player mode selected. Showing score selection.");
+        SetTargetScore("infinite");
+        SetInitialBallSpeed(11f);
     }
 
     public void StartPlayerVsAIModeWithDifficulty(string difficulty)
@@ -391,7 +446,7 @@ public class GameController : MonoBehaviour
         }
         else
         {
-            Debug.LogError("AI Racket reference not set in GameController for difficulty setting!");
+
         }
 
         currentGameMode = "PvAI";
@@ -401,18 +456,22 @@ public class GameController : MonoBehaviour
         {
             scoreSelectionPanel.SetActive(true);
         }
-        if (scoreInputField != null)
-        {
-            scoreInputField.text = "";
-        }
+        SetTargetScore("infinite");
+        SetInitialBallSpeed(11f);
+    }
 
-        Debug.Log($"Player vs AI game selected with difficulty: {difficulty}. Showing score selection.");
+    public void SetInitialBallSpeed(float speed)
+    {
+        if (ballController != null)
+        {
+            ballController.SetInitialSpeed(speed);
+        }
     }
 
     public void ConfirmScoreAndStartGame()
     {
-        string scoreText = scoreInputField.text;
-        SetTargetScore(scoreText);
+        string finalScoreText = scoreInputField.text;
+        SetTargetScore(finalScoreText);
 
         if (scoreSelectionPanel != null)
         {
@@ -420,31 +479,17 @@ public class GameController : MonoBehaviour
         }
 
         start.StartCountdown();
-        Debug.Log($"Starting game with custom target score: {(isInfiniteScore ? "Infinite" : targetScore.ToString())}");
-    }
-
-    public void SetInputAndConfirmScore(string scoreValue)
-    {
-        if (scoreInputField != null)
-        {
-            scoreInputField.text = scoreValue;
-        }
-        ConfirmScoreAndStartGame();
     }
 
     public void ReturnToMainMenuFromScoreSelection()
     {
         ReturnToMainMenu();
-        if (scoreInputField != null)
-        {
-            scoreInputField.text = "";
-        }
-        Debug.Log("Returning to Main Menu from Score Selection.");
     }
 
     public void changeMusicMode()
     {
         doPlayMusic = !doPlayMusic;
+
         if (doPlayMusic == false)
         {
             if (gameplayAudioSource != null && gameplayAudioSource.isPlaying)
@@ -472,7 +517,6 @@ public class GameController : MonoBehaviour
 
     public void QuitGame()
     {
-        Debug.Log("Quitting game...");
         Application.Quit();
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
@@ -481,19 +525,33 @@ public class GameController : MonoBehaviour
 
     public void SetTargetScore(string scoreText)
     {
-        Debug.Log($"SetTargetScore called. Received: '{scoreText}'");
-
-        if (int.TryParse(scoreText, out int parsedScore) && parsedScore > 0)
+        if (scoreText.ToLower() == "infinite" || string.IsNullOrEmpty(scoreText))
+        {
+            targetScore = -1;
+            isInfiniteScore = true;
+            if (scoreInputField != null && scoreInputField.text != "Infinite")
+            {
+                scoreInputField.text = "Infinite";
+            }
+        }
+        else if (int.TryParse(scoreText, out int parsedScore) && parsedScore > 0)
         {
             targetScore = parsedScore;
             isInfiniteScore = false;
+            if (scoreInputField != null && scoreInputField.text != scoreText)
+            {
+                scoreInputField.text = scoreText;
+            }
         }
         else
         {
             targetScore = -1;
             isInfiniteScore = true;
+            if (scoreInputField != null && scoreInputField.text != "Infinite")
+            {
+                scoreInputField.text = "Infinite";
+            }
         }
-        Debug.Log("Target score set to: " + targetScore + " (Is Infinite: " + isInfiniteScore + ")");
     }
 
     private void CheckWinCondition()
@@ -553,15 +611,15 @@ public class GameController : MonoBehaviour
         {
             if (scoreLeft >= targetScore)
             {
-                winnerMessage = "You Won!";
-                if (scoreLeftText != null) scoreLeftText.color = loserColor;
-                if (scoreRightText != null) scoreRightText.color = winnerColor;
+                winnerMessage = "You Lost";
+                if (scoreLeftText != null) scoreLeftText.color = winnerColor;
+                if (scoreRightText != null) scoreRightText.color = loserColor;
             }
             else if (scoreRight >= targetScore)
             {
-                winnerMessage = "You Lost!";
-                if (scoreLeftText != null) scoreLeftText.color = winnerColor;
-                if (scoreRightText != null) scoreRightText.color = loserColor;
+                winnerMessage = "You Won!";
+                if (scoreLeftText != null) scoreLeftText.color = loserColor;
+                if (scoreRightText != null) scoreRightText.color = winnerColor;
             }
             else
             {
@@ -585,5 +643,53 @@ public class GameController : MonoBehaviour
         }
 
         PlayMusic(menuAudioSource, gameplayAudioSource);
+    }
+
+    public void SetBallSpeedResetAfterGoal(bool shouldReset)
+    {
+        resetBallSpeedAfterGoal = shouldReset;
+
+        if (speedResetToggle != null && speedResetToggle.isOn != shouldReset)
+        {
+            speedResetToggle.isOn = shouldReset;
+        }
+    }
+
+    public void PlayAgain()
+    {
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(false);
+        }
+
+        currentGameMode = _previousGameMode;
+
+        if (currentGameMode == "PvP")
+        {
+            if (leftRacket != null) { leftRacket.isPlayer = true; }
+            if (rightRacket != null) { rightRacket.isPlayer = true; }
+        }
+        else if (currentGameMode == "PvAI")
+        {
+            if (leftRacket != null) { leftRacket.isPlayer = true; }
+            if (rightRacket != null) { rightRacket.isPlayer = false; }
+            if (aiRacket != null && !string.IsNullOrEmpty(_previousAIDifficulty))
+            {
+                aiRacket.SetAIDifficulty(_previousAIDifficulty);
+            }
+        }
+
+        targetScore = _previousTargetScore;
+        isInfiniteScore = _previousIsInfiniteScore;
+
+        SetBallSpeedResetAfterGoal(_previousResetBallSpeedAfterGoal);
+
+        if (ballController != null)
+        {
+            ballController.SetInitialSpeed(_previousInitialBallSpeed);
+        }
+
+        ResetFullGameState();
+        StartGame();
     }
 }
