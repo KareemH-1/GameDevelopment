@@ -52,6 +52,10 @@ All base assets (e.g., sprites, scripts) were sourced from the above tutorial.
 * **Ball Control Enhancements:**
     * Fine-tuned ball behavior during goals, pauses, and game state transitions.
     * Fixed some minor bugs.
+* **Limit Frame Rate:**
+    * Limited frame rate to maximum 240 to ensure consistent gameplay across different hardware.
+* **Touch Controls:**
+    * Added touch controls for mobile devices, allowing players to control paddles using touch gestures.
 
 ## ▶️ How to Play
 
@@ -64,9 +68,9 @@ All base assets (e.g., sprites, scripts) were sourced from the above tutorial.
 ## 🎮 Controls
 
 * **Player vs Player:**
-    * Left Player: `W` / `S`
-    * Right Player: `↑` / `↓`
+    * Left Player: `W` / `S` / Touch/Click on the left side of the screen
+    * Right Player: `↑` / `↓`/ Touch/Click on the right side of the screen
 * **Player vs AI:**
-    * Player: `W` / `S` or `↑` / `↓`
+    * Player: `W` / `S` or `↑` / `↓` / Touch/Click 
 * **Toggle Music:**
     * Click the **"Music: On/Off"** button in the **Main Menu** or **Pause Menu**.

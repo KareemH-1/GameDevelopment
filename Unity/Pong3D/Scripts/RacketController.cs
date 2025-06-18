@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 public class RacketController : MonoBehaviour
 {
@@ -37,7 +38,8 @@ public class RacketController : MonoBehaviour
 
     private BallController ballController;
 
-
+    private bool _isMovingUpViaTouch = false;
+    private bool _isMovingDownViaTouch = false;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -67,6 +69,23 @@ public class RacketController : MonoBehaviour
             moveByAI();
         }
     }
+
+    public void MoveUp()
+    {
+        rb.linearVelocity = Vector3.forward * playerSpeed;
+    }
+
+    public void MoveDown()
+    {
+        rb.linearVelocity = Vector3.forward * -playerSpeed;
+    }
+
+    public void StopMoving()
+    {
+        rb.linearVelocity = Vector3.zero;
+    }
+
+
 
     public int isPlayerOther()
     {
@@ -142,11 +161,11 @@ public class RacketController : MonoBehaviour
            pressedDown2 = Input.GetKey(KeyCode.S);
 
         }
-        if (pressedUp || pressedUp2)
+        if (pressedUp || pressedUp2 || _isMovingUpViaTouch)
         {
             rb.linearVelocity = Vector3.forward * playerSpeed;
         }
-        else if (pressedDown || pressedDown2)
+        else if (pressedDown || pressedDown2 || _isMovingDownViaTouch)
         {
             rb.linearVelocity = Vector3.forward * -playerSpeed;
         }
@@ -154,5 +173,40 @@ public class RacketController : MonoBehaviour
         {
             rb.linearVelocity = Vector3.forward * 0;
         }
+    }
+
+
+    public void OnTouchUpZoneDown()
+    {
+        _isMovingUpViaTouch = true;
+        _isMovingDownViaTouch = false; 
+        Debug.Log(gameObject.name + ": Up Zone Down");
+    }
+
+    public void OnTouchUpZoneUp()
+    {
+        _isMovingUpViaTouch = false;
+        Debug.Log(gameObject.name + ": Up Zone Up");
+    }
+
+    public void OnTouchDownZoneDown()
+    {
+        _isMovingDownViaTouch = true;
+        _isMovingUpViaTouch = false;
+        Debug.Log(gameObject.name + ": Down Zone Down");
+    }
+
+    public void OnTouchDownZoneUp()
+    {
+        _isMovingDownViaTouch = false;
+        Debug.Log(gameObject.name + ": Down Zone Up");
+    }
+
+    public void ResetTouchStates()
+    {
+        _isMovingUpViaTouch = false;
+        _isMovingDownViaTouch = false;
+        StopMoving();
+        Debug.Log(gameObject.name + ": Touch states reset.");
     }
 }

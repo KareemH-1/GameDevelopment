@@ -75,6 +75,8 @@ public class GameController : MonoBehaviour
     public Button score15Button;
     public Button scoreInfiniteButton;
 
+    public GameObject touchControlsPanelPvAI;
+    public GameObject touchControlsPanelPvP;
 
     void Start()
     {
@@ -83,9 +85,11 @@ public class GameController : MonoBehaviour
 
         audioSourceGoal = gameObject.AddComponent<AudioSource>();
         audioSourceGoal.playOnAwake = false;
+        audioSourceGoal.clip = goalSoundClip;
 
         audioSourceStart = gameObject.AddComponent<AudioSource>();
         audioSourceStart.playOnAwake = false;
+        audioSourceStart.clip = startSoundClip;
 
         gameplayAudioSource = gameObject.AddComponent<AudioSource>();
         gameplayAudioSource.loop = true;
@@ -94,7 +98,7 @@ public class GameController : MonoBehaviour
 
         menuAudioSource = gameObject.AddComponent<AudioSource>();
         menuAudioSource.loop = true;
-        menuAudioSource.playOnAwake = false;
+        menuAudioSource.playOnAwake = true;
         menuAudioSource.clip = menuMusicClip;
 
         if (gameModePanel != null) { gameModePanel.SetActive(true); }
@@ -102,6 +106,10 @@ public class GameController : MonoBehaviour
         if (gameOverPanel != null) { gameOverPanel.SetActive(false); }
         if (aiDifficultyPanel != null) { aiDifficultyPanel.SetActive(false); }
         if (scoreSelectionPanel != null) { scoreSelectionPanel.SetActive(false); }
+
+        if (touchControlsPanelPvAI != null) { touchControlsPanelPvAI.SetActive(false); }
+        if (touchControlsPanelPvP != null) { touchControlsPanelPvP.SetActive(false); }
+
 
         if (returnToMainMenuButton != null)
         {
@@ -139,13 +147,9 @@ public class GameController : MonoBehaviour
 
         ResetFullGameState();
 
-        PlayMusic(menuAudioSource, gameplayAudioSource);
         UpdateMusicStatusText();
 
-        if (aiRacket == null)
-        {
-
-        }
+        PlayMusic(gameplayAudioSource, null);
     }
 
     void Update()
@@ -199,6 +203,8 @@ public class GameController : MonoBehaviour
         {
             pauseMenuPanel.SetActive(true);
         }
+        if (touchControlsPanelPvAI != null) { touchControlsPanelPvAI.SetActive(false); }
+        if (touchControlsPanelPvP != null) { touchControlsPanelPvP.SetActive(false); }
 
         PlayMusic(menuAudioSource, gameplayAudioSource);
         UpdateMusicStatusText();
@@ -216,13 +222,20 @@ public class GameController : MonoBehaviour
             pauseMenuPanel.SetActive(false);
         }
 
-        if (wasBallMovingBeforePause && gameStarted)
+        if (gameStarted)
         {
-            ballController.EnableMovement();
+            if (wasBallMovingBeforePause)
+            {
+                ballController.EnableMovement();
+            }
+            if (currentGameMode == "PvAI" && touchControlsPanelPvAI != null) { touchControlsPanelPvAI.SetActive(true); }
+            else if (currentGameMode == "PvP" && touchControlsPanelPvP != null) { touchControlsPanelPvP.SetActive(true); }
             PlayMusic(gameplayAudioSource, menuAudioSource);
         }
         else
         {
+            if (touchControlsPanelPvAI != null) { touchControlsPanelPvAI.SetActive(false); }
+            if (touchControlsPanelPvP != null) { touchControlsPanelPvP.SetActive(false); }
             PlayMusic(menuAudioSource, gameplayAudioSource);
         }
         UpdateMusicStatusText();
@@ -268,6 +281,9 @@ public class GameController : MonoBehaviour
         ballController.ResetSpeed();
         SetBallSpeedResetAfterGoal(true);
 
+        if (leftRacket != null) { leftRacket.isPlayer = true; leftRacket.ResetTouchStates(); }
+        if (rightRacket != null) { rightRacket.ResetTouchStates(); }
+
         if (start != null)
         {
             start.ResetAnimatorState();
@@ -277,8 +293,8 @@ public class GameController : MonoBehaviour
         isPaused = false;
         gameStarted = false;
         wasBallMovingBeforePause = false;
-
-        if (leftRacket != null) { leftRacket.isPlayer = true; }
+        if (touchControlsPanelPvAI != null) { touchControlsPanelPvAI.SetActive(false); }
+        if (touchControlsPanelPvP != null) { touchControlsPanelPvP.SetActive(false); }
     }
 
     private void UpdateMusicStatusText()
@@ -367,6 +383,8 @@ public class GameController : MonoBehaviour
         {
             ballController.ResetSpeed();
         }
+        if (touchControlsPanelPvAI != null) { touchControlsPanelPvAI.SetActive(false); }
+        if (touchControlsPanelPvP != null) { touchControlsPanelPvP.SetActive(false); }
 
         start.StartCountdown();
     }
@@ -390,6 +408,10 @@ public class GameController : MonoBehaviour
         }
         ballController.StartNewPoint();
         PlayMusic(gameplayAudioSource, menuAudioSource);
+
+        if (currentGameMode == "PvAI" && touchControlsPanelPvAI != null) { touchControlsPanelPvAI.SetActive(true); }
+        else if (currentGameMode == "PvP" && touchControlsPanelPvP != null) { touchControlsPanelPvP.SetActive(true); }
+
         ResumeGame();
     }
 
@@ -403,6 +425,8 @@ public class GameController : MonoBehaviour
         {
             aiDifficultyPanel.SetActive(true);
         }
+        if (touchControlsPanelPvAI != null) { touchControlsPanelPvAI.SetActive(false); }
+        if (touchControlsPanelPvP != null) { touchControlsPanelPvP.SetActive(false); }
     }
 
     public void StartPlayerVsPlayerMode()
@@ -412,8 +436,8 @@ public class GameController : MonoBehaviour
             gameModePanel.SetActive(false);
         }
 
-        if (leftRacket != null) { leftRacket.isPlayer = true; }
-        if (rightRacket != null) { rightRacket.isPlayer = true; }
+        if (leftRacket != null) { leftRacket.isPlayer = true; leftRacket.ResetTouchStates(); }
+        if (rightRacket != null) { rightRacket.isPlayer = true; rightRacket.ResetTouchStates(); }
 
         currentGameMode = "PvP";
         ResetFullGameState();
@@ -422,6 +446,7 @@ public class GameController : MonoBehaviour
         {
             scoreSelectionPanel.SetActive(true);
         }
+
         SetTargetScore("infinite");
         SetInitialBallSpeed(11f);
     }
@@ -437,16 +462,21 @@ public class GameController : MonoBehaviour
             gameModePanel.SetActive(false);
         }
 
-        if (leftRacket != null) { leftRacket.isPlayer = true; }
-        if (rightRacket != null) { rightRacket.isPlayer = false; }
+        if (leftRacket != null)
+        {
+            leftRacket.isPlayer = true;
+            leftRacket.ResetTouchStates();
+        }
+
+        if (rightRacket != null)
+        {
+            rightRacket.isPlayer = false;
+            rightRacket.ResetTouchStates();
+        }
 
         if (aiRacket != null)
         {
             aiRacket.SetAIDifficulty(difficulty);
-        }
-        else
-        {
-
         }
 
         currentGameMode = "PvAI";
@@ -584,6 +614,9 @@ public class GameController : MonoBehaviour
         Color winnerColor = Color.green;
         Color loserColor = Color.red;
 
+        if (leftRacket != null) leftRacket.ResetTouchStates();
+        if (rightRacket != null) rightRacket.ResetTouchStates();
+
         if (scoreLeftText != null) scoreLeftText.color = Color.white;
         if (scoreRightText != null) scoreRightText.color = Color.white;
 
@@ -641,6 +674,8 @@ public class GameController : MonoBehaviour
         {
             gameOverPanel.SetActive(true);
         }
+        if (touchControlsPanelPvAI != null) { touchControlsPanelPvAI.SetActive(false); }
+        if (touchControlsPanelPvP != null) { touchControlsPanelPvP.SetActive(false); }
 
         PlayMusic(menuAudioSource, gameplayAudioSource);
     }
